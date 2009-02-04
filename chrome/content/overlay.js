@@ -247,21 +247,39 @@ var searchy = new function() {
 
       json.responseData.results.forEach(
         function(result) {
-          var vbox = document.createElement('vbox');
-          vbox.setAttribute('class', 'result');
-          vbox.setAttribute('href', result.unescapedUrl);
-          var title = document.createElementNS("http://www.w3.org/1999/xhtml", "html:div");
-          title.setAttribute('class', 'title');
-          appendHTMLtoXUL(result.title, title);
-          vbox.appendChild(title);
+          var vbox;
+
+          if (result.GsearchResultClass == "GimageSearch") {
+            vbox = document.createElement('hbox');
+            vbox.setAttribute('class', 'result');
+            vbox.setAttribute('href', result.unescapedUrl);
+            // Image search performed, render the good stuff.
+            var imgbox = document.createElementNS("http://www.w3.org/1999/xhtml", "html:div");
+            var title = document.createElementNS("http://www.w3.org/1999/xhtml", "html:img");
+            title.setAttribute('src', result.unescapedUrl);
+            title.setAttribute('width', result.tbWidth);
+            title.setAttribute('height', result.tbHeight);
+            imgbox.appendChild(title);
+            vbox.appendChild(imgbox);
+          } else {
+            vbox = document.createElement('vbox');
+            vbox.setAttribute('class', 'result');
+            vbox.setAttribute('href', result.unescapedUrl);
+            var title = document.createElementNS("http://www.w3.org/1999/xhtml", "html:div");
+            title.setAttribute('class', 'title');
+            appendHTMLtoXUL(result.title, title);
+            vbox.appendChild(title);
+          }
+
           var description = document.createElementNS("http://www.w3.org/1999/xhtml", "html:div");
           description.setAttribute('class', 'description');
           appendHTMLtoXUL(result['content'], description);
           vbox.appendChild(description);
-          var url = document.createElementNS("http://www.w3.org/1999/xhtml", "html:div");
+/*          var url = document.createElementNS("http://www.w3.org/1999/xhtml", "html:div");
           url.setAttribute('class', 'url');
           appendHTMLtoXUL(result.unescapedUrl, url);
           vbox.appendChild(url);
+*/
           box.appendChild(vbox);
 
           if (!current) {
@@ -286,7 +304,17 @@ var searchy = new function() {
     }
 
     function urlFor(search) {
-      var base = "http://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=%QUERY%";
+      var base = "http://ajax.googleapis.com/ajax/services/search/";
+      var basePostfix = "?v=1.0&rsz=large&q=%QUERY%";
+    
+      if (search.indexOf('$i') == 0) {
+        // Image search, now splice out the keycode
+        search = search.slice(2);
+        base += "images" + basePostfix;
+      } else {
+        // Default to web search
+        base += "web" + basePostfix;
+      }
 
       if ((search[0] == '@') && currentHost()) {
         search = search.slice(1) + " site:" + currentHost();

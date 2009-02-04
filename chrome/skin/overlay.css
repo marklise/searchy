@@ -57,6 +57,7 @@
 #searchy .result .description
 {
   padding-bottom: 5px;
+  max-width: 150px;
 }
 
 #searchy .result .url
